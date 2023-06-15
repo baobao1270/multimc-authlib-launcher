@@ -31,5 +31,5 @@ $sed -i "/param --userType/{n; s/.*/param msa/}"                  "$script_root/
 $sed -i "s/^userName .*$/userName $username/"                     "$script_root/last-launch.stdin"
 $sed -i "s/^sessionId .*$/sessionId token:$access_token/"         "$script_root/last-launch.stdin"
 
-echo $INST_JAVA -javaagent:"$script_root/authlib-injector.jar"=$SERVER_ADDRESS -Dauthlibinjector.yggdrasil.prefetched=$PREFETCH_DATA "$@" --username "$username" --uuid "$userid"  --userType msa --accessToken "$access_token"
+echo $INST_JAVA -javaagent:"$script_root/authlib-injector.jar"=$SERVER_ADDRESS -Dauthlibinjector.yggdrasil.prefetched=$PREFETCH_DATA "$@"
 cat "$script_root/last-launch.stdin" |  $INST_JAVA -javaagent:"$script_root/authlib-injector.jar"=$SERVER_ADDRESS -Dauthlibinjector.yggdrasil.prefetched=$PREFETCH_DATA "$@"
