@@ -1,0 +1,5 @@
+*.log
+*token*
+.DS_Store
+authlib.env
+*.stdin

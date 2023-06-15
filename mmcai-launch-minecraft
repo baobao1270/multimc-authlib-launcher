@@ -1,0 +1,35 @@
+#!/bin/bash
+PATH="$PATH:/usr/local/bin:/opt/homebrew/bin"
+
+if [ $(uname) = "Darwin" ]; then
+    sed="gsed"
+else
+    sed="sed"
+fi
+
+script_root="$(dirname $0)"
+. "$script_root/authlib.env"
+shift
+
+echo -n "" > "$script_root/last-launch.stdin"
+while true; do
+    read buffer
+    echo "$buffer" >> "$script_root/last-launch.stdin"
+    if [ "$buffer" = "launch" ]; then
+        break
+    fi
+done
+
+username=$(cat "$script_root/authlib-token.json"     | jq -r ".selectedProfile.name")
+userid=$(cat "$script_root/authlib-token.json"       | jq -r ".selectedProfile.id")
+access_token=$(cat "$script_root/authlib-token.json" | jq -r ".accessToken")
+
+$sed -i "/param --username/{n; s/.*/param $username/}"            "$script_root/last-launch.stdin"
+$sed -i "/param --uuid/{n; s/.*/param $userid/}"                  "$script_root/last-launch.stdin"
+$sed -i "/param --accessToken/{n; s/.*/param $access_token/}"     "$script_root/last-launch.stdin"
+$sed -i "/param --userType/{n; s/.*/param msa/}"                  "$script_root/last-launch.stdin"
+$sed -i "s/^userName .*$/userName $username/"                     "$script_root/last-launch.stdin"
+$sed -i "s/^sessionId .*$/sessionId token:$access_token/"         "$script_root/last-launch.stdin"
+
+echo $INST_JAVA -javaagent:"$script_root/authlib-injector.jar"=$SERVER_ADDRESS -Dauthlibinjector.yggdrasil.prefetched=$PREFETCH_DATA "$@" --username "$username" --uuid "$userid"  --userType msa --accessToken "$access_token"
+cat "$script_root/last-launch.stdin" |  $INST_JAVA -javaagent:"$script_root/authlib-injector.jar"=$SERVER_ADDRESS -Dauthlibinjector.yggdrasil.prefetched=$PREFETCH_DATA "$@"
